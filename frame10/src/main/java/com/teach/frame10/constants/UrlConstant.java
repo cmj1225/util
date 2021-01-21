@@ -8,7 +8,7 @@ public class UrlConstant {
     static {
         if (type == RELEASE_NET){
             // TODO: 2021/1/21
-            BASE_URL = "http://static.owspace.com/";
+            BASE_URL = "https://www.wanandroid.com/";
         } else if (type == TEST_OUTER_NET){
             BASE_URL = "";
         } else {

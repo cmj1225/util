@@ -5,6 +5,5 @@ package com.teach.frame10.constants;
  */
 public class ApiConfig {
     public static final int DEMO_TEST = 0;
-    public static final int SEND_VERIFY = 1;
-    public static final int GET_ADVERT = 2;
+
 }
