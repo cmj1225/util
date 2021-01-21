@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialog_bg"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#8f000000">
+
+    <RelativeLayout
+        android:id="@+id/popup_anima"
+        android:layout_width="@dimen/dp_280"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="@dimen/dp_60"
+        android:layout_marginTop="@dimen/dp_120"
+        android:layout_marginRight="@dimen/dp_60"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/white_bg"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_360"
+            android:background="@drawable/content_dialog_bg">
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/dp_15"
+                android:layout_marginRight="@dimen/dp_15"
+                android:layout_marginTop="@dimen/dp_101"
+                android:layout_above="@+id/bottom_notice"
+                android:layout_marginBottom="@dimen/dp_16"
+                android:id="@+id/recyclerView"/>
+
+            <TextView
+                android:id="@+id/bottom_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="@dimen/dp_17"
+                android:layout_marginRight="@dimen/dp_17"
+                android:layout_marginBottom="@dimen/dp_20"
+                android:text="看看有未认证医生、僵尸医生、将流失医生，给自己定个小目标吧，赶紧动起来！"
+                android:textColor="#ff999999"
+                android:textSize="12sp" />
+            <RelativeLayout
+                android:id="@+id/bottom_notice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/bottom_content"
+                android:layout_marginBottom="@dimen/sp_14"
+                android:layout_centerHorizontal="true">
+                <TextView
+                    android:id="@+id/notice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="友情提示"
+                    android:layout_centerInParent="true"
+                    android:textColor="#ff999999"
+                    android:textSize="12sp"/>
+                <View
+                    android:layout_width="@dimen/dp_30"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_marginRight="@dimen/dp_5"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/notice"
+                    android:background="@color/line_color"/>
+                <View
+                    android:layout_width="@dimen/dp_30"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_marginLeft="@dimen/dp_5"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/notice"
+                    android:background="@color/line_color"/>
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/close_pop"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_below="@+id/white_bg"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/dp_27"
+            android:src="@drawable/transmmit_cha" />
+    </RelativeLayout>
+</RelativeLayout>
