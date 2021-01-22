@@ -3,21 +3,15 @@ package com.teach.frame10.frame;
 import android.app.Activity;
 import android.util.Log;
 
-import androidx.fragment.app.Fragment;
-
-import com.teach.frame10.constants.LoadType;
 import com.teach.frame10.design.LoadView;
-import com.teach.frame10.frame.ICommonModel;
-import com.teach.frame10.frame.ICommonPresenter;
-import com.teach.frame10.frame.ICommonView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import androidx.fragment.app.Fragment;
 import io.reactivex.disposables.Disposable;
-
 
 public class CommonPresenter<V extends ICommonView, M extends ICommonModel> implements ICommonPresenter {
     private WeakReference<V> mView;
@@ -26,7 +20,19 @@ public class CommonPresenter<V extends ICommonView, M extends ICommonModel> impl
     private LoadView mLoadView;
     private List<String> mApiList;//用于添加并发网络请求的标识
 
-
+    /**
+     * 用于view创建presenter的构造，因为presenter要回调数据给view层，调用model的对象发起网络任务，所以这里通过
+     * 泛型指定了view和model的类型为框架抽取的公共接口的子实现类
+     * WeakReference：如果应用长时间使用或快速切换页面过程中，view视图不断创建，那么presenter和model也会同步创建对象，如果gc
+     * 线程不能及时触发该实例，导致由于频繁创建对象回收不及时内存陡增，通过弱引用包裹presenter和model的实例，加快其
+     * 回收的速度
+     * mDisposables：当对应view的网络任务开始后，如果view在网络请求完成前销毁，那model请求的数据也就没有继续
+     * 请求的必要了，通过获取model的disposable对象，在presenter层统一添加到集合当中，绑定和view的生命周期，当view销毁
+     * 停止所有网络任务，这里主要是当presenter对象创建时，对应的创建存储当前view所有网络请求的绑定对象。
+     *
+     * @param pView  view对象
+     * @param pModel model对象
+     */
     public CommonPresenter(V pView, M pModel) {
         mView = new WeakReference<>(pView);
         mModel = new WeakReference<>(pModel);
@@ -34,47 +40,71 @@ public class CommonPresenter<V extends ICommonView, M extends ICommonModel> impl
         mApiList = new LinkedList<>();
     }
 
-  
+    /**
+     * 该方法用于view通过presenter的引用，调用其发起网络请求
+     *
+     * @param whichApi 接口标识
+     * @param pObjects 一般是接口参数，如果有其他参数的需求，可以动态添加到该可变参数中
+     */
     @Override
     public void getData(int whichApi, Object... pObjects) {
         if (mModel != null && mModel.get() != null) mModel.get().getData(whichApi, this, pObjects);
         else Log.e(this.getClass().getSimpleName(), "getData: model maybe null");
-        controlLoading(whichApi);
+        //controlLoading(whichApi);
     }
 
     private void controlLoading(int whichApi) {
         if (mView != null && mView.get() != null) {
             Activity activity = mView.get() instanceof Activity? (Activity) mView.get():((Fragment) mView.get()).getActivity();
-            //loadview使用了单例，一个页面销毁后改示例仍存在，所以再activity销毁前将该对象置空，方便下个页面再次创对象
+            //为避免
+            //这里注意，loadview使用了单例，一个页面销毁后改示例仍存在，所以再activity销毁前将该对象置空，方便下个页面再次创对象
             mLoadView = LoadView.getInstance(activity, "");
             if (!mLoadView.isShowing()) mLoadView.show();
             if (!mApiList.contains(whichApi)) mApiList.add(String.valueOf(whichApi));
         }
     }
 
-
+    /**
+     * 作用同上，增加了加载类型标识，一般用于带刷新和加载更多的网络任务
+     *
+     * @param whichApi 接口标识
+     * @param loadType 加载类型标识，具体情况参照LoadType
+     * @param pObjects 一般是接口参数，如果有其他参数的需求，可以动态添加到该可变参数中
+     */
     @Override
     public void getDataWithLoadType(int whichApi, int loadType, Object... pObjects) {
         if (mModel != null && mModel.get() != null)
             mModel.get().getDataWithLoadType(whichApi, loadType, this, pObjects);
         else Log.e(this.getClass().getSimpleName(), "getData: model maybe null");
-        if (loadType == LoadType.NORMAL) controlLoading(whichApi);
+        //  if (loadType == LoadType.NORMAL) controlLoading(whichApi);
     }
 
-
+    /**
+     * 网络任务完成回调的方法，该方法
+     *
+     * @param whichApi 回传的接口标识，明确当前哪个网络任务完成了
+     * @param pObjects 网络请求成功后回传的实体对象获取在特殊环境下需回传的一些特殊标识
+     */
     @Override
     public void onSuccess(int whichApi, Object... pObjects) {
-        String s = String.valueOf(whichApi);
-        if (mApiList.contains(s)) mApiList.remove(s);
-        if (mApiList.size() == 0 )  cancelLoadingView();
+        if (mApiList.contains(whichApi)) mApiList.remove(String.valueOf(whichApi));
+        if (mApiList.size() == 0 && mLoadView != null) mLoadView.dismiss();
         if (mView != null && mView.get() != null) mView.get().onSuccess(whichApi, pObjects);
+        //cancelLoadingView();
     }
 
+    /**
+     * 同上，增加加载类型
+     *
+     * @param whichApi 回传的接口标识，明确当前哪个网络任务完成了
+     * @param loadType 告诉view层当前返回的任务是加载更多还是刷新，以针对性的控制集合数据和取消页面刷新加载的效果
+     * @param pObjects 网络请求成功后回传的实体对象获取在特殊环境下需回传的一些特殊标识
+     */
     @Override
     public void onSuccessWithLoadType(int whichApi, int loadType, Object[] pObjects) {
         if (mView != null && mView.get() != null)
             mView.get().onSuccessWithLoadType(whichApi, loadType, pObjects);
-        cancelLoadingView();
+        //cancelLoadingView();
     }
 
     public void cancelLoadingView() {
@@ -83,15 +113,22 @@ public class CommonPresenter<V extends ICommonView, M extends ICommonModel> impl
         }
     }
 
+    /**
+     * 网络请求失败的回调
+     *
+     * @param whichApi   失败的接口标识
+     * @param pThrowable 失败返回的throwable对象
+     */
     @Override
     public void onFailed(int whichApi, Throwable pThrowable) {
-        if (mApiList.contains(whichApi)) mApiList.remove(String.valueOf(whichApi));
-        if (mApiList.size() == 0 )  cancelLoadingView();
-        if (mView != null && mView.get() != null) {
-            mView.get().onFailed(whichApi, pThrowable);
-        }
+        if (mView != null && mView.get() != null) mView.get().onFailed(whichApi, pThrowable);
     }
 
+    /**
+     * 该方法用于在view销毁时调用，具体内容有以下几点
+     * 1，当view销毁时，断开所有该view发起的网络任务
+     * 2，接触presenter和view、model的绑定关系
+     */
     public void finishConnected() {
         if (mDisposables != null && mDisposables.size() != 0) {
             for (Disposable disposable : mDisposables) {
